@@ -2,6 +2,8 @@
 
 > *Learn everything. Forget nothing.*
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+
 An **AI-powered learning companion** for Android — Obsidian-style local-first knowledge
 management, fused with spaced repetition and an ambient AI that resurfaces what you're
 about to forget. Not a note app with AI bolted on: a *learning OS* where the AI is the
@@ -83,4 +85,6 @@ docs/CHECKPOINTS.md    Checkpoint manifests (the build's resume mechanism)
 
 ## Status
 
-Active daily development. Licence: to be decided before the public release.
+Active daily development. Licensed under **AGPL-3.0** — see [`LICENSE`](LICENSE).
+Security model and vulnerability reporting: see [`SECURITY.md`](SECURITY.md).
+Contributions welcome: see [`CONTRIBUTING.md`](CONTRIBUTING.md).

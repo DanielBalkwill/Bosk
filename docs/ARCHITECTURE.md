@@ -5,7 +5,7 @@ structural things.
 
 ## Platform: Native Android (Kotlin + Jetpack Compose)
 
-**Decision:** Native Android, not React Native/Expon.
+**Decision:** Native Android, not React Native/Expo.
 
 **Reasoning:** The flagship features — the **overlay popup** (`SYSTEM_ALERT_WINDOW`),
 the **foreground ambient daemon**, **notification media controls**, and **TextToSpeech**
@@ -35,14 +35,22 @@ Every Gemini call and DB query is a `suspend` function or `Flow`. The UI observe
 via `StateFlow` in ViewModels. **No AI call ever blocks the main thread.** Streaming
 Gemini output is a `Flow<String>` so the TTS engine can speak before generation finishes.
 
-## AI: BYOK Gemini, key encrypted on-device (global rule #5)
+## AI: multi-provider BYOK, keys encrypted on-device (global rule #5)
 
-Users bring their own Gemini API key. We bear **zero AI cost** and never proxy their
-data. The key lives only in `EncryptedSharedPreferences` (`core/auth/SecureKeyStore`),
-AES-256 with key material in the Android Keystore, and is excluded from backup/transfer
-(`res/xml/*_rules.xml`, file name `mnemos_secure_prefs`). It is only ever sent to
-`generativelanguage.googleapis.com`. The **Knowledge Profile** ("Mulch pattern") is
-prepended to each call so the model has context cheaply without re-ingesting the corpus.
+Users bring their own API key. Mnemos is **provider-agnostic**: a `LlmRouter`
+(`core/ai/llm/`) fronts interchangeable providers — Gemini, OpenAI, Anthropic, any
+**OpenAI-compatible** endpoint (Groq, Cerebras, OpenRouter, DeepSeek, or a custom base
+URL), and on-device **Gemini Nano** (keyless). The provider is auto-detected from the key
+prefix, and the chosen provider is persisted so routing is stable across launches.
+
+We bear **zero AI cost** and never proxy user data. Each provider's key lives only in
+`EncryptedSharedPreferences` (`core/auth/SecureKeyStore`) — AES-256-GCM for values,
+AES-256-SIV for names, master key in the Android Keystore — is excluded from cloud backup
+and device-to-device transfer (`res/xml/*_rules.xml`, file name `mnemos_secure_prefs`), is
+never logged, and is **only ever sent to that provider's own endpoint**. The **Knowledge
+Profile** ("Mulch pattern") is prepended to each call so the model has context cheaply
+without re-ingesting the corpus, and `⟦redaction⟧` markers (`core/notes/Redaction.kt`)
+strip marked content out of every outbound request.
 
 ## Spaced repetition: FSRS-4.5, as a pure function (global rule #6)
 
