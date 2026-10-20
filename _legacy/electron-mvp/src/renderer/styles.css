@@ -1,0 +1,74 @@
+:root {
+  --bg: #0b0d12;
+  --card: #141720;
+  --line: #232838;
+  --text: #e6e8ee;
+  --muted: #9aa0ad;
+  --accent: #6c8cff;
+  --danger: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+}
+
+.shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 28px;
+}
+
+.brand { text-align: center; }
+.logo { font-size: 44px; color: var(--accent); line-height: 1; }
+.brand h1 { font-size: 22px; margin: 12px 0 4px; }
+.tag { color: var(--muted); margin: 0; font-size: 13px; }
+
+.card {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+}
+.card h2 { font-size: 17px; margin: 0 0 8px; }
+.card p { color: var(--muted); font-size: 13.5px; line-height: 1.55; margin: 0 0 18px; }
+.card code { background: #0b0d12; padding: 1px 5px; border-radius: 4px; color: #cdd3e0; }
+
+.btn-google {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: #fff; color: #1f1f1f; border: 0;
+  padding: 11px 18px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: transform .05s ease;
+}
+.btn-google:hover { transform: translateY(-1px); }
+.btn-google:disabled { opacity: .6; cursor: default; }
+.btn-google .g {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: linear-gradient(135deg,#4285f4,#ea4335 60%,#fbbc05);
+  color: #fff; font-weight: 800; font-size: 13px;
+}
+
+.btn-ghost {
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--line); padding: 9px 16px;
+  border-radius: 9px; font-size: 13px; cursor: pointer;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+.avatar { width: 64px; height: 64px; border-radius: 50%; margin-bottom: 6px; background: #232838; }
+.muted { color: var(--muted); }
+.error { color: var(--danger); font-size: 13px; margin-top: 14px; }
+.hidden { display: none; }

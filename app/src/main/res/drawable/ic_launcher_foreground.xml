@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mnemos mark: a stylised 'M' (memory) in warm gold, centred within the adaptive
+     icon's safe zone (72x72 of the 108x108 canvas). Placeholder mark — TODO CP6: final icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#C8A96E"
+        android:pathData="M38,38 L38,70 L44,70 L44,50 L52,64 L56,64 L64,50 L64,70 L70,70 L70,38 L63,38 L54,54 L45,38 Z" />
+</vector>

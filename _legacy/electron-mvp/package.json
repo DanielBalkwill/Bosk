@@ -1,0 +1,15 @@
+{
+  "name": "ambient-companion",
+  "version": "0.0.1",
+  "description": "Ambient AI summarisation & replay companion — desktop shell (Google auth MVP)",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging"
+  },
+  "author": "SherlockTech",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}

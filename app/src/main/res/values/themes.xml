@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme. The real colour system lives in Compose
+         (ui/theme/Theme.kt) using Material You dynamic colour; this XML theme only
+         needs to set a sane window background + status bar before Compose takes over,
+         avoiding a white flash on cold start. -->
+    <style name="Theme.Mnemos" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ink_background</item>
+        <item name="android:statusBarColor">@color/ink_background</item>
+        <item name="android:navigationBarColor">@color/ink_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Cold-start splash (AndroidX SplashScreen — Android 12 look on every version):
+         brand-ink background + launcher icon, handing over to Theme.Mnemos.
+         MainActivity calls installSplashScreen() before super.onCreate(). -->
+    <style name="Theme.Mnemos.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ink_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.Mnemos</item>
+    </style>
+</resources>

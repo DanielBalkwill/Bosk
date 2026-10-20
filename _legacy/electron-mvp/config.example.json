@@ -1,0 +1,10 @@
+{
+  "_comment": "Copy this file to config.json and fill in your Google OAuth *Desktop app* credentials. See README.md for the 2-minute setup. config.json is gitignored so your keys never get committed.",
+  "googleClientId": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+  "googleClientSecret": "YOUR_CLIENT_SECRET",
+  "scopes": [
+    "openid",
+    "email",
+    "profile"
+  ]
+}

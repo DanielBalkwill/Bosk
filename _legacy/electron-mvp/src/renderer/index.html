@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ambient Companion</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <div class="brand">
+      <div class="logo">◐</div>
+      <h1>Ambient Companion</h1>
+      <p class="tag">Your background AI summariser &amp; replay</p>
+    </div>
+
+    <!-- Setup-needed state -->
+    <section id="needs-setup" class="card hidden">
+      <h2>One-time setup</h2>
+      <p>No <code>config.json</code> found yet. Copy <code>config.example.json</code> → <code>config.json</code>
+         and paste your Google OAuth <strong>Desktop app</strong> client ID &amp; secret. See the README.</p>
+    </section>
+
+    <!-- Signed-out state -->
+    <section id="signed-out" class="card hidden">
+      <h2>Sign in to begin</h2>
+      <p>Connect your Google account. This opens your browser to Google — your credentials never touch us.</p>
+      <button id="sign-in" class="btn-google">
+        <span class="g">G</span> Sign in with Google
+      </button>
+      <p id="error" class="error hidden"></p>
+    </section>
+
+    <!-- Signed-in state -->
+    <section id="signed-in" class="card hidden">
+      <img id="avatar" class="avatar" alt="" />
+      <h2 id="name">—</h2>
+      <p id="email" class="muted">—</p>
+      <button id="sign-out" class="btn-ghost">Sign out</button>
+    </section>
+  </main>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

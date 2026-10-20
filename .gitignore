@@ -1,0 +1,28 @@
+# Android / Gradle
+*.iml
+.gradle/
+.kotlin/
+/local.properties
+.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Per-module build output
+app/build/
+
+# Secrets
+.env
+keystore.properties
+
+# Legacy Electron MVP (archived, regenerable)
+_legacy/electron-mvp/node_modules/
+
+# Claude Code — personal, machine-local permission allowlist
+.claude/settings.local.json

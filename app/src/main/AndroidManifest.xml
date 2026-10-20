@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- On-device Gemini Nano (AICore) declares minSdk 31. We keep the app's minSdk at 26 and
+         override the library's floor: Nano is simply unavailable on API 26–30 (the provider
+         fails gracefully there), while the rest of the app runs fine. -->
+    <uses-sdk tools:overrideLibrary="com.google.ai.edge.aicore" />
+
+    <!-- AI calls go directly to each provider's own endpoint -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Ambient daemon (foreground service) + TTS playback — CP4 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Queue alarms/events (CP33). Exact alarms are best-effort; we fall back to inexact. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Flagship overlay popup (Authenticator-style floating card) — CP4 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <application
+        android:name=".MnemosApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Mnemos"
+        tools:targetApi="34">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Mnemos.Splash"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Share-sheet capture: share text/a URL from ANY app → saved straight into the vault
+             (a translucent, finish-immediately activity — no UI beyond a confirmation toast). -->
+        <activity
+            android:name=".ShareReceiverActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!-- TODO CP3: wire downloadable Google Fonts (DM Serif Display, DM Sans, JetBrains Mono)
+             with the standard gms fonts cert array. Using system serif/sans fallbacks for now. -->
+
+        <!-- Ambient daemon: foreground service hosting TTS playback. -->
+        <service
+            android:name=".service.ambient.AmbientService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Flagship overlay popup (Authenticator-style floating card). -->
+        <service
+            android:name=".service.overlay.OverlayService"
+            android:exported="false" />
+
+        <!-- Fires queue alarms/events → posts a reminder notification (CP33). -->
+        <receiver
+            android:name=".service.queue.QueueAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Home-screen widget (Glance): due-card count, one tap into the app. -->
+        <receiver
+            android:name=".service.widget.MnemosWidgetReceiver"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/mnemos_widget_info" />
+        </receiver>
+
+        <!-- We supply WorkManager's Configuration via MnemosApplication (Hilt worker factory),
+             so disable the default on-startup initializer. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+    </application>
+
+</manifest>

@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Mnemos</string>
+    <string name="app_tagline">Learn everything. Forget nothing.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Today</string>
+    <string name="nav_notes">Notes</string>
+    <string name="nav_graph">Graph</string>
+    <string name="nav_review">Practise</string>
+    <string name="nav_ai_partner">AI Partner</string>
+    <string name="nav_settings">Settings</string>
+</resources>

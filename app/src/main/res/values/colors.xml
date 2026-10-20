@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Provisional design tokens (see docs/ARCHITECTURE.md + Master Prompt appendix).
+         Material You dynamic colour overrides the accent at runtime on Android 12+;
+         these are the static fallbacks. -->
+    <color name="ink_background">#0D0D0F</color>
+    <color name="ink_surface">#161618</color>
+    <color name="ink_surface_1">#1E1E21</color>
+    <color name="ink_border">#2A2A2E</color>
+    <color name="ink_text_primary">#F2EDE8</color>
+    <color name="ink_text_secondary">#9B9693</color>
+    <color name="ink_accent">#C8A96E</color>
+    <color name="ink_error">#E05C5C</color>
+    <color name="ink_success">#5CBF8A</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
