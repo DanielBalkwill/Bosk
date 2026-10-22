@@ -1,4 +1,4 @@
-# Mnemos — Architecture
+# Bosk — Architecture
 
 This document records the *why* behind every major decision. Read it before changing
 structural things.
@@ -25,7 +25,7 @@ independent of Android UI, and isolates the permission-heavy background code.
 ## Dependency injection: Hilt
 
 Standard for native Android, compile-time validated, integrates with WorkManager and
-ViewModels. The object graph is rooted in `MnemosApplication`. CP1 needs almost none of
+ViewModels. The object graph is rooted in `BoskApplication`. CP1 needs almost none of
 it (`SecureKeyStore` self-provides via `@Inject`); it pays off from CP2 onward when DB,
 network, and repositories need wiring.
 
@@ -37,7 +37,7 @@ Gemini output is a `Flow<String>` so the TTS engine can speak before generation 
 
 ## AI: multi-provider BYOK, keys encrypted on-device (global rule #5)
 
-Users bring their own API key. Mnemos is **provider-agnostic**: a `LlmRouter`
+Users bring their own API key. Bosk is **provider-agnostic**: a `LlmRouter`
 (`core/ai/llm/`) fronts interchangeable providers — Gemini, OpenAI, Anthropic, any
 **OpenAI-compatible** endpoint (Groq, Cerebras, OpenRouter, DeepSeek, or a custom base
 URL), and on-device **Gemini Nano** (keyless). The provider is auto-detected from the key
@@ -46,7 +46,7 @@ prefix, and the chosen provider is persisted so routing is stable across launche
 We bear **zero AI cost** and never proxy user data. Each provider's key lives only in
 `EncryptedSharedPreferences` (`core/auth/SecureKeyStore`) — AES-256-GCM for values,
 AES-256-SIV for names, master key in the Android Keystore — is excluded from cloud backup
-and device-to-device transfer (`res/xml/*_rules.xml`, file name `mnemos_secure_prefs`), is
+and device-to-device transfer (`res/xml/*_rules.xml`, file name `bosk_secure_prefs`), is
 never logged, and is **only ever sent to that provider's own endpoint**. The **Knowledge
 Profile** ("Mulch pattern") is prepended to each call so the model has context cheaply
 without re-ingesting the corpus, and `⟦redaction⟧` markers (`core/notes/Redaction.kt`)

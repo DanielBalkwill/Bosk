@@ -1,4 +1,4 @@
-# Mnemos — Checkpoint Manifests
+# Bosk — Checkpoint Manifests
 
 The resume mechanism. Each checkpoint appends its manifest here when complete so any
 future session can continue without context loss.
@@ -28,10 +28,10 @@ Files created:
     res/xml/{backup_rules,data_extraction_rules}.xml (exclude the secure prefs)
     res/mipmap-anydpi-v26/ic_launcher{,_round}.xml + res/drawable/ic_launcher_{fg,bg}.xml
   Kotlin — app:
-    MnemosApplication.kt (@HiltAndroidApp), MainActivity.kt (@AndroidEntryPoint)
+    BoskApplication.kt (@HiltAndroidApp), MainActivity.kt (@AndroidEntryPoint)
   Kotlin — ui:
     theme/{Color,Type,Shape,Theme}.kt  ("deep ink on paper" + Material You dynamic colour)
-    navigation/{Destinations,MnemosNavHost}.kt  (bottom-bar over 5 screens)
+    navigation/{Destinations,BoskNavHost}.kt  (bottom-bar over 5 screens)
     screens/{home,notes,graph,review,settings,onboarding}/*Screen.kt  (navigable placeholders)
     components/PlaceholderScreen.kt
   Kotlin — core (interfaces/stubs with TODO CP markers):
@@ -50,7 +50,7 @@ Key decisions:
   - Version catalog (libs.versions.toml) for all deps.
   - Hilt for DI; Coroutines/Flow for all async (no blocking AI calls).
   - SecureKeyStore implemented for real now (key is sacred); prefs file name
-    "mnemos_secure_prefs" is wired to the manifest backup-exclusion rules.
+    "bosk_secure_prefs" is wired to the manifest backup-exclusion rules.
   - Fonts: system serif/sans fallbacks in CP1; real DM Serif/DM Sans via downloadable
     Google Fonts deferred to CP3 (avoided shipping unverified font cert hashes).
   - Services kept as plain stubs (not yet android.app.Service) so the manifest stays
@@ -78,7 +78,7 @@ Database schema (Room, version 1, schema exported to app/schemas/):
   entity/  NoteEntity, NodeEntity, EdgeEntity, ReviewEntity, KnowledgeProfileEntity (singleton)
   dao/     NoteDao, GraphDao (nodes+edges, incl. orphan/edge-count queries), ReviewDao
            (due-queue + observeDueCount), KnowledgeProfileDao
-  Converters (List<String> tags <-> JSON), MnemosDatabase, NotesRepositoryImpl (entity<->Note)
+  Converters (List<String> tags <-> JSON), BoskDatabase, NotesRepositoryImpl (entity<->Note)
   FK cascades wired; indices on updatedAt / noteId / dueDate / source+targetNodeId.
   DEVIATION (rule #6): ReviewEntity uses FSRS stability/difficulty, NOT SM-2 interval/ease.
 
@@ -191,7 +191,7 @@ Ambient daemon:
   service/ambient/AmbientWorker (@HiltWorker, CoroutineWorker) — respects enabled + quiet
     hours, asks CurriculumProvider.next(), calls AmbientService.surface().
   service/ambient/AmbientScheduler — WorkManager unique periodic work, battery-not-low
-    constraint, 15-min floor. MnemosApplication is Configuration.Provider (HiltWorkerFactory)
+    constraint, 15-min floor. BoskApplication is Configuration.Provider (HiltWorkerFactory)
     + collects settings.prefs to reschedule; default WM initializer removed in manifest.
   core/curriculum/CurriculumProvider(+Impl) — deterministic priority (overdue card ->
     recent note -> orphan). AI CURRICULUM_NEXT layering deferred to CP5.
@@ -261,7 +261,7 @@ Onboarding (5 steps, ui/screens/onboarding):
     SecureKeyStore -> gemini.validateKey() live test) -> First note -> Permissions
     (POST_NOTIFICATIONS launcher + overlay settings intent). HorizontalPager + dots.
   Gate: SettingsRepository.onboardingComplete (DataStore) drives RootViewModel; MainActivity
-    shows OnboardingScreen until finished, then MnemosNavHost.
+    shows OnboardingScreen until finished, then BoskNavHost.
 
 Settings (now fully functional — also makes CP4 reachable):
   ui/screens/settings/SettingsViewModel + SettingsScreen — Gemini key (ApiKeyField, shared
@@ -362,7 +362,7 @@ Palette (theme/Color.kt — fixed, dynamic colour now OFF in Theme.kt so the bra
   on every device): bg #0D0B0B / surface #161213 / surface2 #1F1819 / border #2E2326 /
   text #F5EFEF / text-secondary #9E8C8E / accent #C94040 / accent-light #E87070 /
   accent-glow 15% red. Mapped onto darkColorScheme (accent=primary, glow=primaryContainer).
-  Theme.kt MnemosTheme(dynamicColor = false) by default.
+  Theme.kt BoskTheme(dynamicColor = false) by default.
 
 Fonts (theme/Type.kt) — bundled TTFs in res/font/ (offline, deterministic; NOT downloadable):
   dm_serif_display_regular.ttf (titles), dm_sans_variable.ttf (UI/body, weights 300/400/500/
@@ -382,7 +382,7 @@ Home (ui/screens/home/HomeScreen.kt — full rebuild) — 5 zones, all real-data
      Add Connection -> onOpenNote(id).
   4. Today's Queue — "N due" accent pill, up to 3 due cards (reviews.dueCards) with coloured
      status dot + Overdue/Due pill, staggered fade-up entrance (80ms/item). Empty -> caught-up.
-  5. Bottom nav (in MnemosNavHost) — restyled NavigationBarItemDefaults.colors (selected =
+  5. Bottom nav (in BoskNavHost) — restyled NavigationBarItemDefaults.colors (selected =
      primary, indicator = accent-glow). Tabs unchanged (Home/Notes/Graph/Review/Settings).
 
 HomeViewModel rebuilt: injects LlmClient + ApplicationContext; combines observeDueCount +
@@ -418,7 +418,7 @@ Added:
     + signupUrl + free flag; fromKey() auto-detects OpenRouter/Groq.
   OpenAiCompatibleProvider (LlmProvider, id=OPENAI_COMPAT) — reuses OpenAI DTOs; baseUrl +
     model + key all from SecureKeyStore (compatBaseUrl/compatModel slots added). validateKey
-    = a 1-token generation (portable across backends). Sends X-Title: Mnemos (OpenRouter).
+    = a 1-token generation (portable across backends). Sends X-Title: Bosk (OpenRouter).
   DI: @IntoMap binding added.
   SettingsViewModel: paste of sk-or-/gsk_ auto-sets base+model. New selectCompatPreset /
     setCompatBaseUrl / setCompatModel / saveCompatKey + compatBaseUrl/compatModel StateFlows.
@@ -563,7 +563,7 @@ ALL FOUR QoL CHECKPOINTS (CP8–CP11) COMPLETE. APK 23.0MB. No device attached t
 - Tests: +4 in `WikiLinksTest` (longest-first, boundary, embed-skip, position/case).
 
 ## CP13 — Swipe navigation (HorizontalPager)
-- `ui/navigation/MnemosNavHost.kt`: rewritten. A two-route `NavHost` (`main` + note-editor overlay); `main` is a new `MainPager` that hosts all five top destinations in a `HorizontalPager`. Flick left/right between sections; tapping the bottom bar `animateScrollToPage`s smoothly. Clash-Royale depth via `graphicsLayer` scale (0.90→1.0) + alpha (0.5→1.0) keyed on `currentPageOffsetFraction`.
+- `ui/navigation/BoskNavHost.kt`: rewritten. A two-route `NavHost` (`main` + note-editor overlay); `main` is a new `MainPager` that hosts all five top destinations in a `HorizontalPager`. Flick left/right between sections; tapping the bottom bar `animateScrollToPage`s smoothly. Clash-Royale depth via `graphicsLayer` scale (0.90→1.0) + alpha (0.5→1.0) keyed on `currentPageOffsetFraction`.
 - `ui/navigation/Destinations.kt`: added `Routes.MAIN = "main"`.
 - Bottom bar selection now tracks `pagerState.currentPage`; Review badge preserved.
 
@@ -581,7 +581,7 @@ Build: `:app:assembleDebug :app:testDebugUnitTest` green — 38/38 unit tests, A
 - `ui/screens/notes/NoteEditorScreen.kt`: replaced the bottom `AiComposeBar` with `AiDropdown` — a tab/handle hanging from the top of the editor; pull down (detectVerticalDragGestures) or tap to reveal the prompt panel (AnimatedVisibility + Surface, bottom-rounded). On send the panel collapses so the live body rewrite is visible. Editor content wrapped in a Box; Column gets top padding for the collapsed handle.
 
 ## CP17 — Graph side tabs + swipe disabled on graph
-- `ui/navigation/MnemosNavHost.kt`: `HorizontalPager(userScrollEnabled = currentPage != Graph)` so panning the graph no longer flips tabs; passes `onSwipePrev/onSwipeNext` (animateScrollToPage page∓1) into GraphScreen.
+- `ui/navigation/BoskNavHost.kt`: `HorizontalPager(userScrollEnabled = currentPage != Graph)` so panning the graph no longer flips tabs; passes `onSwipePrev/onSwipeNext` (animateScrollToPage page∓1) into GraphScreen.
 - `ui/screens/graph/GraphScreen.kt`: `EdgeTab` composables pinned CenterStart/CenterEnd (chevrons) call those callbacks.
 
 ## CP18 — Manual add-node / add-link
@@ -627,12 +627,12 @@ Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, A
 
 ## CP26 — AI Partner moved off the bottom bar
 - `Destinations.kt`: removed `TopDestination.AiPartner` (back to 5 tabs); added `Routes.AI_PARTNER`.
-- `MnemosNavHost.kt`: new full-screen `ai_partner` route; `MainPager` passes `onOpenAiPartner` → SettingsScreen.
+- `BoskNavHost.kt`: new full-screen `ai_partner` route; `MainPager` passes `onOpenAiPartner` → SettingsScreen.
 - `SettingsScreen.kt`: an "AI Partner" button at the top opens it; `AiPartnerScreen` now has a back top bar.
 
 ## CP27 — Tab-switch + Home-swipe smoothness
 - `HomeScreen.kt`: `pinchToExpand` rewritten with `awaitEachGesture` to react ONLY to 2-finger pinches and only consume during a real pinch — single-finger swipes now pass through to the pager (the home cards' old `detectTransformGestures` was eating one-finger pans, which made swiping off Home sluggish).
-- `MnemosNavHost.kt`: bottom-bar taps + graph edge-tabs use `animateScrollToPage(tween(320, FastOutSlowIn))` for a crisp, consistent slide.
+- `BoskNavHost.kt`: bottom-bar taps + graph edge-tabs use `animateScrollToPage(tween(320, FastOutSlowIn))` for a crisp, consistent slide.
 
 ## CP28 — Practise session UX
 - `ReviewViewModel.exitToDecks()` ends the current session → deck list/summary.
@@ -649,7 +649,7 @@ Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, A
 Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, APK 23.0 MB. Not run on a device this session.
 
 ## CP31 — Tab-switch optimization
-- `MnemosNavHost.MainPager.animateTo`: only ADJACENT hops animate (quick 240ms slide); far jumps use `scrollToPage` (instant). This stops the pager composing every heavy intermediate screen mid-animation, which was the tab-switch lag.
+- `BoskNavHost.MainPager.animateTo`: only ADJACENT hops animate (quick 240ms slide); far jumps use `scrollToPage` (instant). This stops the pager composing every heavy intermediate screen mid-animation, which was the tab-switch lag.
 
 ## CP32 — Home prev/next note
 - `HomeViewModel`: `_selectedIndex` folded into the state combine; `previousNote()/nextNote()` cycle the focused note (clamped). The focused note drives Now Reading, Now Playing, and the mini-graph centre.
@@ -671,7 +671,7 @@ Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, A
 Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, APK 23.2 MB. Not run on a device this session.
 
 ## CP36 — Pager recomposition fix (in-app tab lag)
-- `MnemosNavHost`: the per-page depth transform now reads `pagerState.currentPageOffsetFraction` INSIDE the `graphicsLayer { }` block (draw phase) instead of in composition. Reading it in composition recomposed every visible page's whole subtree on every scroll frame — the real in-app tab-switch lag. Also softened the depth (scale 0.94→1, alpha 0.7→1) so less compositing.
+- `BoskNavHost`: the per-page depth transform now reads `pagerState.currentPageOffsetFraction` INSIDE the `graphicsLayer { }` block (draw phase) instead of in composition. Reading it in composition recomposed every visible page's whole subtree on every scroll frame — the real in-app tab-switch lag. Also softened the depth (scale 0.94→1, alpha 0.7→1) so less compositing.
 
 ## CP37 — Alarms ring + vibrate
 - `QueueAlarmReceiver`: alarm channel now configured with the default **alarm ringtone** (USAGE_ALARM) + vibration pattern; the receiver also vibrates directly (VibratorManager/Vibrator) and plays the default alarm tone via RingtoneManager (audible even if notifications are quiet). Manifest: `VIBRATE` permission.
@@ -693,6 +693,6 @@ Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, A
 Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, APK 28.1 MB. Not run on a device this session.
 
 ## CP42 — More tab-swipe smoothness
-- `MnemosNavHost` HorizontalPager: `beyondViewportPageCount = 1` so the neighbouring page is composed BEFORE the swipe (no first-composition mid-gesture). Dropped the per-page `alpha` from the depth transform (alpha<1 forces offscreen compositing each frame); kept a subtle scale-only (0.97→1) read in the draw phase.
+- `BoskNavHost` HorizontalPager: `beyondViewportPageCount = 1` so the neighbouring page is composed BEFORE the swipe (no first-composition mid-gesture). Dropped the per-page `alpha` from the depth transform (alpha<1 forces offscreen compositing each frame); kept a subtle scale-only (0.97→1) read in the draw phase.
 
 Build: `:app:assembleDebug` green, APK 28.1 MB. Not run on a device this session.

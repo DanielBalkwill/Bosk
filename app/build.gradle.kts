@@ -19,11 +19,11 @@ val googleServerClientId: String =
     (localProps.getProperty("GOOGLE_SERVER_CLIENT_ID") ?: "").trim()
 
 android {
-    namespace = "com.generic.mnemos"
+    namespace = "app.bosk"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.generic.mnemos"
+        applicationId = "app.bosk"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

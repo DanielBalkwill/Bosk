@@ -3,9 +3,9 @@
      cloud backup and device-to-device transfer. -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="sharedpref" path="mnemos_secure_prefs.xml" />
+        <exclude domain="sharedpref" path="bosk_secure_prefs.xml" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="sharedpref" path="mnemos_secure_prefs.xml" />
+        <exclude domain="sharedpref" path="bosk_secure_prefs.xml" />
     </device-transfer>
 </data-extraction-rules>

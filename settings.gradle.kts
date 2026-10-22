@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Mnemos"
+rootProject.name = "Bosk"
 include(":app")

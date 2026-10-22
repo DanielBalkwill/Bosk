@@ -1,4 +1,4 @@
-# Mnemos
+# Bosk
 
 > *Learn everything. Forget nothing.*
 
@@ -9,7 +9,7 @@ management, fused with spaced repetition and an ambient AI that resurfaces what 
 about to forget. Not a note app with AI bolted on: a *learning OS* where the AI is the
 connective tissue between four pillars.
 
-| Pillar | Inspired by | Mnemos role |
+| Pillar | Inspired by | Bosk role |
 |---|---|---|
 | Knowledge graph | Obsidian | `[[wiki-links]]` become a living force-directed graph; **the graph is the curriculum** |
 | Spaced repetition | Anki | FSRS-4.5 scheduling, cloze cards from redactions, Anki `.apkg` import |
@@ -64,7 +64,7 @@ Optional Google sign-in needs `GOOGLE_SERVER_CLIENT_ID` in `local.properties`
 ## Project layout
 
 ```
-app/src/main/java/com/generic/mnemos/
+app/src/main/java/com/generic/bosk/
   core/
     ai/        LlmRouter + providers (Gemini/OpenAI/Anthropic/Nano/OpenAI-compatible),
                NoteAiService, BulkEditService, persona, prompts, roadmap

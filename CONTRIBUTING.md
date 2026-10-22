@@ -1,6 +1,6 @@
-# Contributing to Mnemos
+# Contributing to Bosk
 
-Thanks for your interest in Mnemos. This is an early-stage, actively developed project —
+Thanks for your interest in Bosk. This is an early-stage, actively developed project —
 contributions, bug reports, and ideas are welcome.
 
 ## Ground rules
@@ -12,7 +12,7 @@ contributions, bug reports, and ideas are welcome.
 
 ## Licensing of contributions
 
-Mnemos is licensed under **AGPL-3.0** (see [`LICENSE`](LICENSE)). By submitting a
+Bosk is licensed under **AGPL-3.0** (see [`LICENSE`](LICENSE)). By submitting a
 contribution you agree that it is licensed under the same terms (inbound = outbound).
 Please only submit code you have the right to contribute.
 

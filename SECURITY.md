@@ -1,6 +1,6 @@
 # Security Policy
 
-Mnemos is a **local-first, privacy-by-design** learning app. Security is a first-class
+Bosk is a **local-first, privacy-by-design** learning app. Security is a first-class
 design goal, not an afterthought — this document explains the security model and how to
 report a vulnerability.
 
@@ -26,7 +26,7 @@ Please include:
 
 ## Supported versions
 
-Mnemos is pre-1.0 and under active development. Only the latest `main` / most recent
+Bosk is pre-1.0 and under active development. Only the latest `main` / most recent
 release receives security fixes until a stable release line is established.
 
 | Version | Supported |
@@ -34,7 +34,7 @@ release receives security fixes until a stable release line is established.
 | latest `main` / newest release | ✅ |
 | older pre-releases | ❌ |
 
-## Security model (what Mnemos protects, and how)
+## Security model (what Bosk protects, and how)
 
 ### Assets
 - **User notes and knowledge graph** — potentially sensitive personal content.
@@ -60,7 +60,7 @@ release receives security fixes until a stable release line is established.
 - **Data minimisation via redaction.** `⟦redaction⟧` markers (`core/notes/Redaction.kt`)
   strip marked content out of every outbound AI request, so the user controls exactly
   what reaches a third-party model.
-- **No app-owned backend for the free tier.** Mnemos proxies nothing; there is no
+- **No app-owned backend for the free tier.** Bosk proxies nothing; there is no
   server that sees user data or keys (BYOK model → zero AI cost, zero custodial risk).
 - **Least-privilege permissions.** The app requests only what its features need
   (`INTERNET`, foreground-service/media, overlay, alarms, notifications). See
@@ -75,7 +75,7 @@ release receives security fixes until a stable release line is established.
   raises the bar but is not a defence against a privileged local attacker.
 - **The chosen AI provider sees whatever note content is sent to it** (minus redactions).
   Users should pick a provider whose data policy they accept.
-- Mnemos does not currently offer an app-level passcode/biometric lock on the note store
+- Bosk does not currently offer an app-level passcode/biometric lock on the note store
   (tracked for a future release).
 
 > This policy will grow into a full threat model under `docs/` as the security review

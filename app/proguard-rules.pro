@@ -1,4 +1,4 @@
-# Mnemos ProGuard / R8 rules.
+# Bosk ProGuard / R8 rules.
 
 # Keep kotlinx.serialization generated serializers.
 -keepattributes *Annotation*, InnerClasses
@@ -7,8 +7,8 @@
 -keepclasseswithmembers class * {
     kotlinx.serialization.KSerializer serializer(...);
 }
--keep,includedescriptorclasses class com.generic.mnemos.**$$serializer { *; }
--keepclassmembers class com.generic.mnemos.** {
+-keep,includedescriptorclasses class app.bosk.**$$serializer { *; }
+-keepclassmembers class app.bosk.** {
     *** Companion;
 }
 
@@ -20,6 +20,6 @@
 -dontwarn okio.**
 
 # Keep data model classes used by Gemini JSON (added in CP2).
--keep class com.generic.mnemos.core.ai.model.** { *; }
+-keep class app.bosk.core.ai.model.** { *; }
 
 # TODO CP6: tighten rules + verify release shrink keeps Compose previews out.
