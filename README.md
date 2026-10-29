@@ -18,9 +18,9 @@ pillars.
 
 | Pillar | Inspired by | Bosk's role |
 |---|---|---|
-| **Knowledge graph** | Obsidian | `[[wiki-links]]` become a living force-directed graph — **the graph is the curriculum** |
+| **Knowledge graph** | Obsidian style | `[[wiki-links]]` become a living force-directed graph — **the graph is the curriculum** |
 | **Spaced repetition** | Anki | FSRS-4.5 scheduling, cloze cards from redactions, Anki `.apkg` import |
-| **Markdown editing** | Obsidian | Live-preview editor (rendered in place, caret line raw), reading mode, version history |
+| **Markdown editing** | Obsidian style | Live-preview editor (rendered in place, caret line raw), reading mode, version history |
 | **Ambient companion** | Limitless | Background daemon + lock-screen overlay that speaks micro-lessons and quizzes you |
 
 > **The model is Obsidian's:** free and fully functional offline. The only planned paid
