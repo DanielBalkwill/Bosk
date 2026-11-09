@@ -41,6 +41,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.bosk.core.ai.llm.OpenAiCompatPreset
 import app.bosk.core.settings.DeliveryMode
@@ -59,6 +61,13 @@ fun SettingsScreen(
     var liveFont by remember(noteFontSp) { mutableStateOf(noteFontSp) }
     val commandNote by viewModel.commandNote.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Re-check the overlay permission whenever Settings resumes (e.g. returning from the system
+    // grant screen) so the button reflects reality instead of going stale until next recomposition.
+    var overlayGranted by remember { mutableStateOf(viewModel.hasOverlayPermission()) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        overlayGranted = viewModel.hasOverlayPermission()
+    }
 
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -207,7 +216,7 @@ fun SettingsScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (viewModel.hasOverlayPermission()) "Overlay: granted ✓" else "Grant overlay permission") }
+            ) { Text(if (overlayGranted) "Overlay: granted ✓" else "Grant overlay permission") }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 OutlinedButton(

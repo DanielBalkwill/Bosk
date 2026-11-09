@@ -696,3 +696,18 @@ Build: `:app:assembleDebug :app:testDebugUnitTest` green — 43/43 unit tests, A
 - `BoskNavHost` HorizontalPager: `beyondViewportPageCount = 1` so the neighbouring page is composed BEFORE the swipe (no first-composition mid-gesture). Dropped the per-page `alpha` from the depth transform (alpha<1 forces offscreen compositing each frame); kept a subtle scale-only (0.97→1) read in the draw phase.
 
 Build: `:app:assembleDebug` green, APK 28.1 MB. Not run on a device this session.
+
+## CP43 — AI Tutor streaming & scroll smoothness
+- `AiTutorViewModel`: new `streaming` StateFlow — true only while a reply streams into the last bubble (set/cleared around `streamTutorReply` in a try/finally). Separates "actively streaming" from the overloaded `busy`, which also covers grading/quiz/card generation.
+- `AiTutorScreen` auto-scroll: the effect was keyed only on `messages.size`, so it never followed a streaming reply (the size is constant while the last bubble grows) and `animateScrollToItem` fought manual scroll-up. Now keyed on `(messages.size, lastText)` and only scrolls when the list is already near the bottom (via `layoutInfo`), using `scrollToItem(lastIndex, Int.MAX_VALUE)` to pin to the bottom without animation stutter. Follows the stream; respects a learner who's scrolled up to read back.
+- `TutorBubble`: renders the reply **raw while streaming** — the previous `remember(msg.text) { inlineMarkdown(..) }` re-parsed the entire growing reply on every chunk (O(n²), the main streaming-jank source); markdown is now applied once, when the stream settles. The "Save note / Make cards" chips are hidden while streaming (the reply isn't finished).
+- Chat list: `items(messages)` → `itemsIndexed` so the last (streaming) bubble can be flagged.
+- The "thinking…" row now shows only for non-streaming work (grading, quiz/card generation) or a stream still warming up, and is dropped once tokens flow — no double progress signal beside the growing bubble.
+- `InputBar.submit()` gated on `enabled`: the keyboard's Send action fired even when busy, clearing the field and silently dropping the learner's typed text.
+
+Build: not compiled locally (no JDK on this machine); pushed for GitHub Actions CI to compile + run the unit suite.
+
+## CP44 — Settings: overlay permission reflects reality
+- `SettingsScreen`: the overlay button read `viewModel.hasOverlayPermission()` directly in composition, so after returning from the system grant screen the label stayed "Grant overlay permission" until something else happened to recompose. Now an `overlayGranted` state is re-checked on `Lifecycle.Event.ON_RESUME` (`LifecycleEventEffect`), so the button flips to "Overlay: granted ✓" the moment you come back from granting it.
+
+Build: not compiled locally (no JDK on this machine); pushed for GitHub Actions CI to compile + run the unit suite.

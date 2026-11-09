@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
@@ -77,6 +78,7 @@ fun AiTutorScreen(
 
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val busy by viewModel.busy.collectAsStateWithLifecycle()
+    val streaming by viewModel.streaming.collectAsStateWithLifecycle()
     val contextOpen by viewModel.contextOpen.collectAsStateWithLifecycle()
     val compilerNotes by viewModel.compilerNotes.collectAsStateWithLifecycle()
     val attachedIds by viewModel.attachedNoteIds.collectAsStateWithLifecycle()
@@ -92,8 +94,15 @@ fun AiTutorScreen(
     val missedAvailable by viewModel.missedAvailable.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    // Keep the newest text in view as the conversation grows — including while a reply streams
+    // into the last bubble — but never yank the learner down if they've scrolled up to read back.
+    val lastText = messages.lastOrNull()?.text.orEmpty()
+    LaunchedEffect(messages.size, lastText) {
+        if (messages.isEmpty()) return@LaunchedEffect
+        val info = listState.layoutInfo
+        val nearBottom = info.visibleItemsInfo.lastOrNull()
+            ?.let { it.index >= info.totalItemsCount - 2 } ?: true
+        if (nearBottom) listState.scrollToItem(messages.lastIndex, Int.MAX_VALUE)
     }
 
     val attachedCount = attachedIds.size +
@@ -152,14 +161,19 @@ fun AiTutorScreen(
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                items(messages) { msg ->
+                itemsIndexed(messages) { index, msg ->
                     TutorBubble(
                         msg = msg,
+                        streaming = streaming && index == messages.lastIndex,
                         onSaveNote = { viewModel.saveReplyToNote(msg.text) },
                         onMakeCards = { viewModel.cardsFromReply(msg.text) },
                     )
                 }
-                if (busy) {
+                // The "thinking…" row covers non-streaming work (grading, quiz/card generation)
+                // and a stream that's still warming up; once tokens flow, the growing bubble is
+                // the progress indicator, so we drop the row to avoid a double signal.
+                val lastBlank = messages.lastOrNull()?.text.isNullOrBlank()
+                if (busy && (!streaming || lastBlank)) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(
@@ -242,6 +256,7 @@ fun AiTutorScreen(
 @Composable
 private fun TutorBubble(
     msg: TutorMessage,
+    streaming: Boolean = false,
     onSaveNote: () -> Unit = {},
     onMakeCards: () -> Unit = {},
 ) {
@@ -268,13 +283,19 @@ private fun TutorBubble(
                 .background(bg)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            // Tutor bubbles render inline markdown (**bold**, *italic*, `code`) instead of raw markers.
-            val body = if (isUser || isSystem) androidx.compose.ui.text.AnnotatedString(msg.text)
-            else remember(msg.text) { inlineMarkdown(msg.text) }
+            // Tutor bubbles render inline markdown (**bold**, *italic*, `code`) instead of raw
+            // markers. While a reply is still streaming we render it raw — re-parsing the whole
+            // (growing) reply on every chunk is O(n²) and the main cause of streaming jank; the
+            // formatting is applied once, when the stream settles.
+            val body = when {
+                isUser || isSystem || streaming -> androidx.compose.ui.text.AnnotatedString(msg.text)
+                else -> remember(msg.text) { inlineMarkdown(msg.text) }
+            }
             Text(body, style = MaterialTheme.typography.bodyMedium, color = fg)
 
-            // Turn a finished tutor reply into lasting material: a note, or flashcards.
-            if (!isUser && !isSystem && msg.text.isNotBlank()) {
+            // Turn a finished tutor reply into lasting material: a note, or flashcards. Hidden
+            // while streaming — the reply isn't done yet.
+            if (!isUser && !isSystem && !streaming && msg.text.isNotBlank()) {
                 Row(
                     Modifier.padding(top = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -377,7 +398,9 @@ private fun InputBar(
     // TextFieldValue so a palette pick places the cursor AFTER the inserted command.
     var text by remember { mutableStateOf(TextFieldValue("")) }
     fun submit() {
-        if (text.text.isNotBlank()) { onSend(text.text); text = TextFieldValue("") }
+        // Gate on `enabled` too: the keyboard's Send action fires even when the send button is
+        // disabled (busy), which would otherwise clear the field and silently drop the text.
+        if (enabled && text.text.isNotBlank()) { onSend(text.text); text = TextFieldValue("") }
     }
     Column(Modifier.fillMaxWidth()) {
         // Command palette appears once the learner starts a slash command.

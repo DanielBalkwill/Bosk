@@ -97,6 +97,12 @@ class AiTutorViewModel @Inject constructor(
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
+    // True only while a reply is actively streaming into the last bubble. Lets the UI treat the
+    // growing bubble as its own progress (no redundant "thinking…" row) and skip re-parsing
+    // markdown on every streamed chunk.
+    private val _streaming = MutableStateFlow(false)
+    val streaming: StateFlow<Boolean> = _streaming.asStateFlow()
+
     private val _contextOpen = MutableStateFlow(false)
     val contextOpen: StateFlow<Boolean> = _contextOpen.asStateFlow()
 
@@ -230,6 +236,7 @@ class AiTutorViewModel @Inject constructor(
             append(runCatching { profile.currentContextBlock() }.getOrDefault(""))
         }
         session.append(TutorMessage(TutorRole.TUTOR, ""))
+        _streaming.value = true
         val buf = StringBuilder()
         try {
             llm.generateStream(prompt, systemContext).collect { chunk ->
@@ -240,6 +247,8 @@ class AiTutorViewModel @Inject constructor(
         } catch (e: Exception) {
             session.dropLastIfBlank()
             session.append(TutorMessage(TutorRole.SYSTEM, e.message ?: "Couldn't reach the AI."))
+        } finally {
+            _streaming.value = false
         }
     }
 
