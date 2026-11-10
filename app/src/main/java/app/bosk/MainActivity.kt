@@ -5,12 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.bosk.core.settings.ThemeMode
 import app.bosk.ui.RootViewModel
 import app.bosk.ui.navigation.BoskNavHost
 import app.bosk.ui.screens.onboarding.OnboardingScreen
@@ -25,9 +27,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            BoskTheme {
+            val rootViewModel: RootViewModel = hiltViewModel()
+            val themeMode by rootViewModel.themeMode.collectAsStateWithLifecycle()
+            val dynamicColor by rootViewModel.dynamicColor.collectAsStateWithLifecycle()
+            val darkTheme = when (themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+            BoskTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val rootViewModel: RootViewModel = hiltViewModel()
                     val onboarded by rootViewModel.onboarded.collectAsStateWithLifecycle()
                     when (onboarded) {
                         null -> Unit // brief loading; window background covers it

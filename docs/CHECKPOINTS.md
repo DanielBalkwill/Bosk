@@ -711,3 +711,11 @@ Build: not compiled locally (no JDK on this machine); pushed for GitHub Actions 
 - `SettingsScreen`: the overlay button read `viewModel.hasOverlayPermission()` directly in composition, so after returning from the system grant screen the label stayed "Grant overlay permission" until something else happened to recompose. Now an `overlayGranted` state is re-checked on `Lifecycle.Event.ON_RESUME` (`LifecycleEventEffect`), so the button flips to "Overlay: granted ✓" the moment you come back from granting it.
 
 Build: not compiled locally (no JDK on this machine); pushed for GitHub Actions CI to compile + run the unit suite.
+
+## CP45 — Appearance settings (theme + dynamic colour)
+- `core/settings`: new `ThemeMode { SYSTEM, LIGHT, DARK }` enum + `themeMode`/`dynamicColor` prefs on `SettingsRepository` (DataStore keys `theme_mode`, `dynamic_color`; defaults SYSTEM / off — preserves current behaviour).
+- `RootViewModel`: exposes `themeMode` + `dynamicColor` (collected `Eagerly`) so the theme is resolved at the first frame.
+- `MainActivity`: reads them at the top of `setContent` and drives `BoskTheme(darkTheme, dynamicColor)`; changing the theme in Settings re-themes the whole app live.
+- `SettingsScreen`/`SettingsViewModel`: new **Appearance** section — a System/Light/Dark chip row + a "Use wallpaper colours" (dynamic colour, Android 12+) switch.
+
+Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compile + run the unit suite.

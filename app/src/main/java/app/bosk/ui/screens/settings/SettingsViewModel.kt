@@ -11,6 +11,7 @@ import app.bosk.core.auth.SecureKeyStore
 import app.bosk.core.settings.AmbientPrefs
 import app.bosk.core.settings.DeliveryMode
 import app.bosk.core.settings.SettingsRepository
+import app.bosk.core.settings.ThemeMode
 import app.bosk.service.ambient.AmbientService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -44,6 +45,15 @@ class SettingsViewModel @Inject constructor(
     val noteFontSp: StateFlow<Float> =
         settings.noteFontSp.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 16f)
     fun setNoteFontSp(sp: Float) { viewModelScope.launch { settings.setNoteFontSp(sp) } }
+
+    /** Appearance: theme mode (system/light/dark) + wallpaper dynamic colour. */
+    val themeMode: StateFlow<ThemeMode> =
+        settings.themeMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
+    fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { settings.setThemeMode(mode) } }
+
+    val dynamicColor: StateFlow<Boolean> =
+        settings.dynamicColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    fun setDynamicColor(on: Boolean) { viewModelScope.launch { settings.setDynamicColor(on) } }
 
     /** The editable command note (slash-command reference for the terminal palette + /help). */
     val commandNote: StateFlow<String> =

@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.bosk.core.ai.llm.OpenAiCompatPreset
 import app.bosk.core.settings.DeliveryMode
+import app.bosk.core.settings.ThemeMode
 import app.bosk.ui.components.ApiKeyField
 
 @Composable
@@ -59,6 +60,8 @@ fun SettingsScreen(
     val activeProvider by viewModel.activeProvider.collectAsStateWithLifecycle()
     val noteFontSp by viewModel.noteFontSp.collectAsStateWithLifecycle()
     var liveFont by remember(noteFontSp) { mutableStateOf(noteFontSp) }
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val dynamicColor by viewModel.dynamicColor.collectAsStateWithLifecycle()
     val commandNote by viewModel.commandNote.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -89,6 +92,30 @@ fun SettingsScreen(
                 modifier = Modifier.padding(end = 8.dp).size(20.dp),
             )
             Text("AI Partner")
+        }
+
+        Section("Appearance") {
+            Text("Theme", style = MaterialTheme.typography.labelLarge)
+            ChipRow(
+                options = ThemeMode.entries,
+                selected = themeMode,
+                label = { it.name.lowercase().replaceFirstChar(Char::uppercase) },
+                onSelect = viewModel::setThemeMode,
+            )
+            Row(
+                Modifier.fillMaxWidth().padding(top = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Use wallpaper colours", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "Android 12+. Off keeps Bosk's warm palette; on tints it from your wallpaper.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = dynamicColor, onCheckedChange = viewModel::setDynamicColor)
+            }
         }
 
         Section("Accessibility") {

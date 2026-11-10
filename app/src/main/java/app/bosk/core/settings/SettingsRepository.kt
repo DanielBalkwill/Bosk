@@ -18,6 +18,9 @@ import javax.inject.Singleton
 /** How a surfaced item is delivered during an ambient session. */
 enum class DeliveryMode { TTS, OVERLAY, NOTIFICATION }
 
+/** App theme preference: follow the system, or force light/dark. */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
 /** User-tunable ambient/voice settings (the Settings UI in CP5/CP6 edits these). */
 data class AmbientPrefs(
     val enabled: Boolean = false,
@@ -46,6 +49,14 @@ interface SettingsRepository {
     /** Accessibility: note body/title font size in sp (default 16). */
     val noteFontSp: Flow<Float>
     suspend fun setNoteFontSp(sp: Float)
+
+    /** Appearance: follow system / force light / force dark (default SYSTEM). */
+    val themeMode: Flow<ThemeMode>
+    suspend fun setThemeMode(mode: ThemeMode)
+
+    /** Appearance: tint the palette from the wallpaper on Android 12+ (default off — brand palette). */
+    val dynamicColor: Flow<Boolean>
+    suspend fun setDynamicColor(on: Boolean)
 
     /** Graph: min zoom scale at which node name labels appear ("name render distance"). */
     val graphLabelMinScale: Flow<Float>
@@ -146,6 +157,8 @@ class SettingsRepositoryImpl @Inject constructor(
         val VOICE = stringPreferencesKey("voice_id")
         val ONBOARDED = booleanPreferencesKey("onboarding_complete")
         val NOTE_FONT_SP = floatPreferencesKey("note_font_sp")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
+        val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val GRAPH_LABEL_SCALE = floatPreferencesKey("graph_label_min_scale")
         val GRAPH_LABEL_MULT = floatPreferencesKey("graph_label_size_mult")
         val GRAPH_SETTLE_TEMP = floatPreferencesKey("graph_settle_temp")
@@ -222,6 +235,22 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setNoteFontSp(sp: Float) {
         context.settingsDataStore.edit { it[Keys.NOTE_FONT_SP] = sp.coerceIn(10f, 32f) }
+    }
+
+    override val themeMode: Flow<ThemeMode> =
+        context.settingsDataStore.data.map { p ->
+            p[Keys.THEME_MODE]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM
+        }
+
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        context.settingsDataStore.edit { it[Keys.THEME_MODE] = mode.name }
+    }
+
+    override val dynamicColor: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[Keys.DYNAMIC_COLOR] ?: false }
+
+    override suspend fun setDynamicColor(on: Boolean) {
+        context.settingsDataStore.edit { it[Keys.DYNAMIC_COLOR] = on }
     }
 
     override val graphLabelMinScale: Flow<Float> =
