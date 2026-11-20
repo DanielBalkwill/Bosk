@@ -9,6 +9,7 @@ import app.bosk.core.notes.Note
 import app.bosk.core.notes.NotesRepository
 import app.bosk.core.review.AnkiImporter
 import app.bosk.core.review.Deck
+import app.bosk.core.review.QuizletImport
 import app.bosk.core.review.ReviewCard
 import app.bosk.core.review.ReviewRepository
 import app.bosk.core.srs.Rating
@@ -164,8 +165,33 @@ class ReviewViewModel @Inject constructor(
         return notes.upsert(Note(title = title, body = "Flashcards imported from Anki."))
     }
 
+    /**
+     * Import a Quizlet set pasted from its Export dialog (term/definition pairs) into a deck note.
+     * No scraping or API — the text comes from the user, which keeps it reliable and ToS-clean.
+     */
+    fun importQuizlet(text: String, deckName: String) {
+        viewModelScope.launch {
+            val cards = QuizletImport.parse(text)
+            if (cards.isEmpty()) {
+                _message.value = "No term/definition pairs found. In Quizlet: open the set → ••• → Export → copy, then paste here."
+                return@launch
+            }
+            val title = deckName.ifBlank { QUIZLET_TITLE }
+            val holderId = ensureQuizletDeckNote(title)
+            cards.forEach { reviews.addCard(holderId, it.term, it.definition, aiGenerated = false) }
+            _message.value = "Imported ${cards.size} card${if (cards.size == 1) "" else "s"} from Quizlet into \"$title\"."
+            load()
+        }
+    }
+
+    private suspend fun ensureQuizletDeckNote(title: String): Long {
+        notes.search(title).firstOrNull { it.title == title }?.let { return it.id }
+        return notes.upsert(Note(title = title, body = "Flashcards imported from Quizlet."))
+    }
+
     private companion object {
         const val QUICK_CARDS_TITLE = "Quick Cards"
         const val IMPORTED_TITLE = "Imported (Anki)"
+        const val QUIZLET_TITLE = "Imported (Quizlet)"
     }
 }

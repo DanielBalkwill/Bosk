@@ -168,6 +168,36 @@ class SettingsViewModel @Inject constructor(
         _keyStatus.value = KeyStatus.Idle
     }
 
+    // --- Multi-provider failover chain (ordered priority; primary first, rest are backups) ---
+
+    private val _providerChain = MutableStateFlow(computeChain())
+    val providerChain: StateFlow<List<ProviderId>> = _providerChain.asStateFlow()
+
+    /** Configured providers (those with a key, plus Nano if the user chose it), in failover order. */
+    private fun computeChain(): List<ProviderId> {
+        val order = keyStore.providerOrder
+        val keyed = ProviderId.entries.filter { it.needsKey && keyStore.hasKey(it) }
+        val nano = if (ProviderId.NANO in order) listOf(ProviderId.NANO) else emptyList()
+        val configured = keyed + nano
+        return (order.filter { it in configured } + configured.filter { it !in order }).distinct()
+    }
+
+    /** Recompute from the key store — called when keys are added/removed/validated. */
+    fun refreshProviderChain() { _providerChain.value = computeChain() }
+
+    /** Move a provider up/down the failover chain (top = primary, the rest ordered backups). */
+    fun moveProvider(provider: ProviderId, up: Boolean) {
+        val chain = _providerChain.value.toMutableList()
+        val i = chain.indexOf(provider)
+        if (i < 0) return
+        val j = if (up) i - 1 else i + 1
+        if (j !in chain.indices) return
+        val tmp = chain[i]; chain[i] = chain[j]; chain[j] = tmp
+        keyStore.providerOrder = chain
+        _providerChain.value = chain
+        _activeProvider.value = chain.firstOrNull()
+    }
+
     fun setEnabled(enabled: Boolean) = update { it.copy(enabled = enabled) }
     fun setIntervalMinutes(min: Int) = update { it.copy(intervalMinutes = min) }
     fun setDelivery(mode: DeliveryMode) = update { it.copy(delivery = mode) }

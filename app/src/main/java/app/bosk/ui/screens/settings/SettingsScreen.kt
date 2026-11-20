@@ -30,6 +30,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ fun SettingsScreen(
     val hasKey by viewModel.hasKey.collectAsStateWithLifecycle()
     val keyStatus by viewModel.keyStatus.collectAsStateWithLifecycle()
     val activeProvider by viewModel.activeProvider.collectAsStateWithLifecycle()
+    val providerChain by viewModel.providerChain.collectAsStateWithLifecycle()
     val noteFontSp by viewModel.noteFontSp.collectAsStateWithLifecycle()
     var liveFont by remember(noteFontSp) { mutableStateOf(noteFontSp) }
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
@@ -71,6 +73,8 @@ fun SettingsScreen(
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         overlayGranted = viewModel.hasOverlayPermission()
     }
+    // Keep the failover chain in sync when a key is added/removed/validated.
+    LaunchedEffect(hasKey, activeProvider) { viewModel.refreshProviderChain() }
 
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -184,6 +188,28 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp),
             )
+        }
+
+        if (providerChain.size > 1) {
+            Section("Failover order") {
+                Text(
+                    "When a request fails or hits a rate limit, Bosk automatically tries the next " +
+                        "provider down the list. Top = primary; reorder to choose your backups.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                providerChain.forEachIndexed { index, provider ->
+                    ProviderChainRow(
+                        label = provider.displayName,
+                        rank = if (index == 0) "Primary" else "Backup $index",
+                        canUp = index > 0,
+                        canDown = index < providerChain.lastIndex,
+                        onUp = { viewModel.moveProvider(provider, up = true) },
+                        onDown = { viewModel.moveProvider(provider, up = false) },
+                    )
+                }
+            }
         }
 
         Section("Free & custom AI (OpenAI-compatible)") {
@@ -406,5 +432,28 @@ private fun Stepper(label: String, value: Int, onChange: (Int) -> Unit) {
         OutlinedButton(onClick = { onChange((value + 23) % 24) }) { Text("–") }
         Text("$value", style = MaterialTheme.typography.titleMedium)
         OutlinedButton(onClick = { onChange((value + 1) % 24) }) { Text("+") }
+    }
+}
+
+@Composable
+private fun ProviderChainRow(
+    label: String,
+    rank: String,
+    canUp: Boolean,
+    canDown: Boolean,
+    onUp: () -> Unit,
+    onDown: () -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+            Text(rank, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        OutlinedButton(onClick = onUp, enabled = canUp) { Text("↑") }
+        OutlinedButton(onClick = onDown, enabled = canDown) { Text("↓") }
     }
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -64,6 +66,7 @@ fun ReviewScreen(viewModel: ReviewViewModel = hiltViewModel()) {
     val message by viewModel.message.collectAsStateWithLifecycle()
     val decks by viewModel.decks.collectAsStateWithLifecycle()
     var showAdd by remember { mutableStateOf(false) }
+    var showQuizlet by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val snackbar = remember { SnackbarHostState() }
@@ -101,6 +104,9 @@ fun ReviewScreen(viewModel: ReviewViewModel = hiltViewModel()) {
                     }
                     IconButton(onClick = { importLauncher.launch(arrayOf("*/*")) }) {
                         Icon(Icons.Outlined.FileDownload, contentDescription = "Import Anki deck")
+                    }
+                    IconButton(onClick = { showQuizlet = true }) {
+                        Icon(Icons.Outlined.ContentPaste, contentDescription = "Import from Quizlet")
                     }
                 },
             )
@@ -154,6 +160,13 @@ fun ReviewScreen(viewModel: ReviewViewModel = hiltViewModel()) {
         AddCardDialog(
             onDismiss = { showAdd = false },
             onSave = { f, b -> viewModel.addManualCard(f, b); showAdd = false },
+        )
+    }
+
+    if (showQuizlet) {
+        QuizletImportDialog(
+            onDismiss = { showQuizlet = false },
+            onImport = { name, text -> viewModel.importQuizlet(text, name); showQuizlet = false },
         )
     }
 }
@@ -309,6 +322,42 @@ private fun AddCardDialog(onDismiss: () -> Unit, onSave: (String, String) -> Uni
             }
         },
         confirmButton = { TextButton(onClick = { onSave(front, back) }) { Text("Add") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
+@Composable
+private fun QuizletImportDialog(onDismiss: () -> Unit, onImport: (name: String, text: String) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var pasted by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Import from Quizlet") },
+        text = {
+            Column {
+                Text(
+                    "In Quizlet, open the set → ••• → Export → copy, then paste below. " +
+                        "Term/definition pairs become flashcards.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                )
+                OutlinedTextField(
+                    name, { name = it },
+                    label = { Text("Set name (optional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    pasted, { pasted = it },
+                    label = { Text("Paste Quizlet export here") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp).heightIn(min = 120.dp, max = 240.dp),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onImport(name, pasted) }, enabled = pasted.isNotBlank()) { Text("Import") }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }

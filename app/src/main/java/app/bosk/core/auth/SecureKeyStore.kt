@@ -69,13 +69,38 @@ class SecureKeyStore @Inject constructor(
             if (value.isNullOrBlank()) remove(KEY_COMPAT_MODEL) else putString(KEY_COMPAT_MODEL, value.trim())
         }.apply()
 
-    /** The provider the user last chose, persisted so routing is stable across launches. */
-    var selectedProvider: ProviderId?
-        get() = prefs.getString(KEY_SELECTED, null)
-            ?.let { runCatching { ProviderId.valueOf(it) }.getOrNull() }
+    /**
+     * Failover priority chain, primary first (the BYOK "ordered key list"): [LlmRouter] tries these
+     * providers in order and falls through to the next when a request fails. Empty = fall back to the
+     * default [ProviderId] order. A legacy single selection is migrated into a one-entry chain.
+     */
+    var providerOrder: List<ProviderId>
+        get() {
+            prefs.getString(KEY_PROVIDER_ORDER, null)?.takeIf { it.isNotBlank() }?.let { stored ->
+                return stored.split(",").mapNotNull { runCatching { ProviderId.valueOf(it.trim()) }.getOrNull() }
+            }
+            return prefs.getString(KEY_SELECTED, null)
+                ?.let { runCatching { ProviderId.valueOf(it) }.getOrNull() }
+                ?.let { listOf(it) }
+                ?: emptyList()
+        }
         set(value) = prefs.edit().apply {
-            if (value == null) remove(KEY_SELECTED) else putString(KEY_SELECTED, value.name)
+            if (value.isEmpty()) remove(KEY_PROVIDER_ORDER)
+            else putString(KEY_PROVIDER_ORDER, value.joinToString(",") { it.name })
+            remove(KEY_SELECTED) // superseded by the ordered chain
         }.apply()
+
+    /**
+     * The primary provider = the front of [providerOrder]. Setting it moves that provider to the
+     * front (keeping the rest as backups); setting null clears the whole chain. Kept for callers
+     * that still think in terms of a single "selected" provider.
+     */
+    var selectedProvider: ProviderId?
+        get() = providerOrder.firstOrNull()
+        set(value) {
+            providerOrder = if (value == null) emptyList()
+            else listOf(value) + providerOrder.filter { it != value }
+        }
 
     fun clear() = prefs.edit().clear().apply()
 
@@ -92,6 +117,7 @@ class SecureKeyStore @Inject constructor(
         // Must match the <exclude> paths in backup_rules.xml / data_extraction_rules.xml.
         const val PREFS_FILE = "bosk_secure_prefs"
         private const val KEY_SELECTED = "selected_provider"
+        private const val KEY_PROVIDER_ORDER = "provider_order"
         private const val KEY_COMPAT_URL = "compat_base_url"
         private const val KEY_COMPAT_MODEL = "compat_model"
     }

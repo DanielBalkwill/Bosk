@@ -719,3 +719,18 @@ Build: not compiled locally (no JDK on this machine); pushed for GitHub Actions 
 - `SettingsScreen`/`SettingsViewModel`: new **Appearance** section — a System/Light/Dark chip row + a "Use wallpaper colours" (dynamic colour, Android 12+) switch.
 
 Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compile + run the unit suite.
+
+## CP46 — Multi-provider failover (ordered key/provider chain)
+- `SecureKeyStore`: new `providerOrder: List<ProviderId>` (persisted `provider_order`); `selectedProvider` now delegates to it (front of the list = primary). A legacy single selection migrates into a one-entry chain.
+- `LlmRouter`: builds the ordered, configured chain and tries providers in priority order, falling through to the next on any failure (down / rate-limited / key rejected). `generate` delegates to a pure `generateOverChain`; `generateStream` fails over before the first token (can't switch mid-reply). The ordering is a pure `orderChain` — both are companion functions, so they unit-test with no Android dependency.
+- Settings: a "Failover order" section (shown once 2+ providers are configured) lists the chain with up/down reorder — top = primary, the rest ordered backups. `SettingsViewModel.providerChain` / `moveProvider` / `refreshProviderChain`.
+- Tests: `LlmRouterFailoverTest` (pure helpers + plain fakes + `runBlocking`, no mockk) — primary success, failover to backup, all-fail, skip-unconfigured, append-unordered-as-backup.
+
+Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compile + run the unit suite.
+
+## CP47 — Quizlet set import (paste from Export)
+- Quizlet has no public API and prohibits scraping, so the reliable, ToS-clean path is a paste importer: in Quizlet, open a set -> ... -> Export -> copy, then paste into Bosk. `core/review/QuizletImport` (pure) parses the default tab/newline export plus common custom delimiters (" - " / " : " between term & definition, ";" between cards).
+- `ReviewViewModel.importQuizlet(text, name)` turns the pairs into flashcards under a deck note (reuses the Anki import's note + `addCard` path). `ReviewScreen`: a paste icon in the top bar opens a dialog (set name + pasted text).
+- Tests: `QuizletImportTest` — tab/newline default, dash delimiter, semicolon card separator, blank/malformed rows skipped, empty input.
+
+Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compile + run the unit suite.
