@@ -240,13 +240,19 @@ fun FlashcardGraphScreen(
                     if (isSelected) {
                         drawCircle(color = FgSelected, radius = r + 4f, center = center, style = Stroke(width = 2f))
                     }
-                    // Names only close-up (matches the vault graph's default render distance).
-                    if (scale >= app.bosk.core.settings.DEFAULT_LABEL_MIN_SCALE && n.label.isNotBlank()) {
+                    // Names fade in smoothly as the graph zooms in (opacity gradient, not a pop-in).
+                    val labelFade = app.bosk.ui.screens.graph.labelFadeAlpha(
+                        scale, app.bosk.core.settings.DEFAULT_LABEL_MIN_SCALE,
+                    )
+                    if (labelFade > 0.02f && n.label.isNotBlank()) {
                         drawContext.canvas.nativeCanvas.drawText(
                             n.label.take(24),
                             center.x,
                             center.y + r + 13.sp.toPx(),
-                            labelPaint.apply { color = labelArgb },
+                            labelPaint.apply {
+                                color = labelArgb
+                                alpha = (labelFade * android.graphics.Color.alpha(labelArgb)).toInt()
+                            },
                         )
                     }
                 }

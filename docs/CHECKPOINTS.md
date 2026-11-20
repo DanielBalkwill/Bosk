@@ -734,3 +734,16 @@ Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compi
 - Tests: `QuizletImportTest` — tab/newline default, dash delimiter, semicolon card separator, blank/malformed rows skipped, empty input.
 
 Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compile + run the unit suite.
+
+## CP48 — Graph labels fade in on zoom (opacity gradient)
+- Node names used to pop in abruptly once zoom crossed the "render distance" threshold. New pure `labelFadeAlpha(scale, minScale, band)` (smoothstep over a zoom band ending at the threshold) now drives the label paint's alpha, so names fade in smoothly. Applied in both `GraphScreen` (vault graph, uses the user's `labelMinScale` setting) and `FlashcardGraphScreen` (uses `DEFAULT_LABEL_MIN_SCALE`).
+- Tests: `GraphLabelsTest` — hidden below the band, full at/above the threshold, 0.5 at the band midpoint, monotonic across the band.
+
+Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compile + run the unit suite.
+
+## CP49 — "Open with Bosk" file import (intent filters)
+- New `FileImportActivity` (@AndroidEntryPoint, translucent + toast, like `ShareReceiverActivity`): handles ACTION_VIEW file opens off the main thread. Markdown/text -> a note; an Anki `.apkg` (a zip, sniffed by the PK signature) or a term/definition text export (Anki/Quizlet) -> a deck of flashcards (reuses `AnkiImporter` + `ReviewRepository.addCard`).
+- Manifest: a VIEW intent-filter over content:// and file:// with mime types text/markdown, text/x-markdown, text/plain, application/zip — so Bosk appears in the system "open with" chooser.
+- Caveat: content:// MIME reporting is file-manager-dependent, so `.apkg` surfacing in the chooser varies by manager (the in-app Anki import stays the reliable path). Needs device testing.
+
+Build: not compiled locally (no JDK here); pushed for GitHub Actions CI to compile + run the unit suite.

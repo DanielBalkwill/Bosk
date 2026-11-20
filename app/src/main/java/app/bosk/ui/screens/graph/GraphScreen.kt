@@ -606,9 +606,12 @@ fun GraphScreen(
                         isSelected ->
                             drawCircle(color = selectedColor, radius = r + 6f, center = center, style = Stroke(width = 3f))
                     }
-                    // Names appear only past the user's "render distance" zoom threshold.
-                    if (scale >= labelMinScale && n.label.isNotBlank()) {
+                    // Names fade in smoothly as the graph zooms past the "render distance"
+                    // threshold — an opacity gradient, not a hard pop-in.
+                    val labelFade = labelFadeAlpha(scale, labelMinScale)
+                    if (labelFade > 0.02f && n.label.isNotBlank()) {
                         labelPaint.color = labelArgb
+                        labelPaint.alpha = (labelFade * android.graphics.Color.alpha(labelArgb)).toInt()
                         drawIntoCanvas { canvas ->
                             canvas.nativeCanvas.drawText(
                                 n.label.take(28),

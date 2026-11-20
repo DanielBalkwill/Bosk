@@ -64,6 +64,28 @@
             </intent-filter>
         </activity>
 
+        <!-- "Open with Bosk" from a file manager / any app's open-with sheet:
+             Markdown & text -> a note; an Anki .apkg (zip) or a term/definition text export -> a
+             deck of flashcards. Translucent, toast-only (like the share receiver above). -->
+        <activity
+            android:name=".FileImportActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="Import into Bosk"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter android:label="Import into Bosk">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="text/markdown" />
+                <data android:mimeType="text/x-markdown" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/zip" />
+            </intent-filter>
+        </activity>
+
         <!-- TODO CP3: wire downloadable Google Fonts (DM Serif Display, DM Sans, JetBrains Mono)
              with the standard gms fonts cert array. Using system serif/sans fallbacks for now. -->
 
